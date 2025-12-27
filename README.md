@@ -4,7 +4,7 @@
 [![PyPI version](https://badge.fury.io/py/markdown-editor-mcp-server.svg)](https://badge.fury.io/py/markdown-editor-mcp-server)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![MCP 2025](https://img.shields.io/badge/MCP-2025%20Standard-green.svg)](IMPROVEMENTS_2025.md)
+[![MCP 2025](https://img.shields.io/badge/MCP-2025%20Standard-green.svg)](https://modelcontextprotocol.io)
 
 MCP server providing tools for **structured, semantic editing** of Markdown files. Unlike standard text editors, this server understands the logical structure of your documents.
 
@@ -291,8 +291,8 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 # Install for development
 pip install -e .
 
-# Test MCP 2025 Standard compliance
-python3 test_2025_standard.py
+# Run tests
+pytest tests/
 ```
 
 ### MCP 2025 Standard Features
