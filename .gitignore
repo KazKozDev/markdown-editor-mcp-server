@@ -158,7 +158,6 @@ data/outputs/
 .AppleDouble
 .LSOverride
 
-# Test files
-test_document.md
-test_*.py
-standart.md
+# Temporary test files (not for git)
+/standart.md
+/test_document_temp.md
