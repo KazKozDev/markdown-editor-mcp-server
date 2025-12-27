@@ -39,12 +39,14 @@ class FileOperationsTool:
             base_path = get_base_path()
             items = []
             for entry in os.scandir(abs_path):
-                items.append({
-                    "name": entry.name,
-                    "is_dir": entry.is_dir(),
-                    "size": entry.stat().st_size if entry.is_file() else 0,
-                    "path": os.path.relpath(entry.path, base_path)
-                })
+                items.append(
+                    {
+                        "name": entry.name,
+                        "is_dir": entry.is_dir(),
+                        "size": entry.stat().st_size if entry.is_file() else 0,
+                        "path": os.path.relpath(entry.path, base_path),
+                    }
+                )
             return items
         except Exception as e:
             logger.error(f"Error listing directory {path}: {e}")
@@ -77,7 +79,7 @@ class FileOperationsTool:
             parent_dir = os.path.dirname(abs_path)
             if parent_dir:
                 os.makedirs(parent_dir, exist_ok=True)
-            with open(abs_path, 'w', encoding='utf-8') as f:
+            with open(abs_path, "w", encoding="utf-8") as f:
                 f.write(content)
             return {"success": True, "path": path, "size": len(content)}
         except Exception as e:
@@ -103,17 +105,22 @@ class FileOperationsTool:
         except Exception as e:
             return {"error": str(e)}
 
+
 # Global instance
 _instance = FileOperationsTool()
+
 
 async def list_directory(path: str = "."):
     return await _instance.list_directory(path)
 
+
 async def create_directory(path: str):
     return await _instance.create_directory(path)
 
+
 async def create_file(path: str, content: str = ""):
     return await _instance.create_file(path, content)
+
 
 async def delete_item(path: str):
     return await _instance.delete_item(path)

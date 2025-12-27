@@ -12,18 +12,19 @@ Usage:
     pytest tests/test_ollama_tools.py -v -s
 """
 
-import asyncio
-import json
 import os
 import shutil
 import tempfile
 import pytest
 import httpx
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 # Import MCP tools
 from markdown_editor.tools.file_ops import (
-    create_file, list_directory, create_directory, delete_item
+    create_file,
+    list_directory,
+    create_directory,
+    delete_item,
 )
 from markdown_editor.tools.edit_tools import (
     get_document_structure,
@@ -36,7 +37,7 @@ from markdown_editor.tools.edit_tools import (
     get_element_context,
     move_document_element,
     update_document_metadata,
-    _instance as edit_tool_instance
+    _instance as edit_tool_instance,
 )
 from markdown_editor.core.path_utils import PathResolver
 
@@ -54,11 +55,14 @@ TOOLS_SCHEMA = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "query": {"type": "string", "description": "Description of what you want to do"}
+                    "query": {
+                        "type": "string",
+                        "description": "Description of what you want to do",
+                    }
                 },
-                "required": ["query"]
-            }
-        }
+                "required": ["query"],
+            },
+        },
     },
     {
         "type": "function",
@@ -68,11 +72,15 @@ TOOLS_SCHEMA = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "path": {"type": "string", "description": "Directory path", "default": "."}
+                    "path": {
+                        "type": "string",
+                        "description": "Directory path",
+                        "default": ".",
+                    }
                 },
-                "required": []
-            }
-        }
+                "required": [],
+            },
+        },
     },
     {
         "type": "function",
@@ -83,11 +91,15 @@ TOOLS_SCHEMA = [
                 "type": "object",
                 "properties": {
                     "path": {"type": "string", "description": "File path"},
-                    "content": {"type": "string", "description": "File content", "default": ""}
+                    "content": {
+                        "type": "string",
+                        "description": "File content",
+                        "default": "",
+                    },
                 },
-                "required": ["path"]
-            }
-        }
+                "required": ["path"],
+            },
+        },
     },
     {
         "type": "function",
@@ -99,9 +111,9 @@ TOOLS_SCHEMA = [
                 "properties": {
                     "path": {"type": "string", "description": "Directory path"}
                 },
-                "required": ["path"]
-            }
-        }
+                "required": ["path"],
+            },
+        },
     },
     {
         "type": "function",
@@ -113,9 +125,9 @@ TOOLS_SCHEMA = [
                 "properties": {
                     "path": {"type": "string", "description": "Path to delete"}
                 },
-                "required": ["path"]
-            }
-        }
+                "required": ["path"],
+            },
+        },
     },
     {
         "type": "function",
@@ -125,12 +137,19 @@ TOOLS_SCHEMA = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "file_path": {"type": "string", "description": "Path to the .md file"},
-                    "depth": {"type": "integer", "description": "Max depth of headings", "default": 2}
+                    "file_path": {
+                        "type": "string",
+                        "description": "Path to the .md file",
+                    },
+                    "depth": {
+                        "type": "integer",
+                        "description": "Max depth of headings",
+                        "default": 2,
+                    },
                 },
-                "required": ["file_path"]
-            }
-        }
+                "required": ["file_path"],
+            },
+        },
     },
     {
         "type": "function",
@@ -141,11 +160,14 @@ TOOLS_SCHEMA = [
                 "type": "object",
                 "properties": {
                     "file_path": {"type": "string", "description": "Path to .md file"},
-                    "path": {"type": "string", "description": "Element path like 'Intro > paragraph 1'"}
+                    "path": {
+                        "type": "string",
+                        "description": "Element path like 'Intro > paragraph 1'",
+                    },
                 },
-                "required": ["file_path", "path"]
-            }
-        }
+                "required": ["file_path", "path"],
+            },
+        },
     },
     {
         "type": "function",
@@ -157,11 +179,11 @@ TOOLS_SCHEMA = [
                 "properties": {
                     "file_path": {"type": "string", "description": "Path to .md file"},
                     "path": {"type": "string", "description": "Element path"},
-                    "new_content": {"type": "string", "description": "New content"}
+                    "new_content": {"type": "string", "description": "New content"},
                 },
-                "required": ["file_path", "path", "new_content"]
-            }
-        }
+                "required": ["file_path", "path", "new_content"],
+            },
+        },
     },
     {
         "type": "function",
@@ -173,14 +195,30 @@ TOOLS_SCHEMA = [
                 "properties": {
                     "file_path": {"type": "string", "description": "Path to .md file"},
                     "path": {"type": "string", "description": "Reference element path"},
-                    "element_type": {"type": "string", "enum": ["heading", "paragraph", "list", "code_block", "blockquote"]},
-                    "content": {"type": "string", "description": "Content of new element"},
-                    "where": {"type": "string", "enum": ["before", "after"], "default": "after"},
-                    "heading_level": {"type": "integer", "default": 1}
+                    "element_type": {
+                        "type": "string",
+                        "enum": [
+                            "heading",
+                            "paragraph",
+                            "list",
+                            "code_block",
+                            "blockquote",
+                        ],
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "Content of new element",
+                    },
+                    "where": {
+                        "type": "string",
+                        "enum": ["before", "after"],
+                        "default": "after",
+                    },
+                    "heading_level": {"type": "integer", "default": 1},
                 },
-                "required": ["file_path", "path", "element_type", "content"]
-            }
-        }
+                "required": ["file_path", "path", "element_type", "content"],
+            },
+        },
     },
     {
         "type": "function",
@@ -191,11 +229,11 @@ TOOLS_SCHEMA = [
                 "type": "object",
                 "properties": {
                     "file_path": {"type": "string", "description": "Path to .md file"},
-                    "path": {"type": "string", "description": "Element path to delete"}
+                    "path": {"type": "string", "description": "Element path to delete"},
                 },
-                "required": ["file_path", "path"]
-            }
-        }
+                "required": ["file_path", "path"],
+            },
+        },
     },
     {
         "type": "function",
@@ -206,13 +244,23 @@ TOOLS_SCHEMA = [
                 "type": "object",
                 "properties": {
                     "file_path": {"type": "string", "description": "Path to .md file"},
-                    "source_path": {"type": "string", "description": "Path of element to move"},
-                    "target_path": {"type": "string", "description": "Destination path"},
-                    "where": {"type": "string", "enum": ["before", "after"], "default": "after"}
+                    "source_path": {
+                        "type": "string",
+                        "description": "Path of element to move",
+                    },
+                    "target_path": {
+                        "type": "string",
+                        "description": "Destination path",
+                    },
+                    "where": {
+                        "type": "string",
+                        "enum": ["before", "after"],
+                        "default": "after",
+                    },
                 },
-                "required": ["file_path", "source_path", "target_path"]
-            }
-        }
+                "required": ["file_path", "source_path", "target_path"],
+            },
+        },
     },
     {
         "type": "function",
@@ -223,11 +271,11 @@ TOOLS_SCHEMA = [
                 "type": "object",
                 "properties": {
                     "file_path": {"type": "string", "description": "Path to .md file"},
-                    "query": {"type": "string", "description": "Text to search for"}
+                    "query": {"type": "string", "description": "Text to search for"},
                 },
-                "required": ["file_path", "query"]
-            }
-        }
+                "required": ["file_path", "query"],
+            },
+        },
     },
     {
         "type": "function",
@@ -238,11 +286,11 @@ TOOLS_SCHEMA = [
                 "type": "object",
                 "properties": {
                     "file_path": {"type": "string", "description": "Path to .md file"},
-                    "path": {"type": "string", "description": "Element path"}
+                    "path": {"type": "string", "description": "Element path"},
                 },
-                "required": ["file_path", "path"]
-            }
-        }
+                "required": ["file_path", "path"],
+            },
+        },
     },
     {
         "type": "function",
@@ -253,11 +301,11 @@ TOOLS_SCHEMA = [
                 "type": "object",
                 "properties": {
                     "file_path": {"type": "string", "description": "Path to .md file"},
-                    "metadata": {"type": "object", "description": "Metadata to update"}
+                    "metadata": {"type": "object", "description": "Metadata to update"},
                 },
-                "required": ["file_path", "metadata"]
-            }
-        }
+                "required": ["file_path", "metadata"],
+            },
+        },
     },
     {
         "type": "function",
@@ -268,12 +316,16 @@ TOOLS_SCHEMA = [
                 "type": "object",
                 "properties": {
                     "file_path": {"type": "string", "description": "Path to .md file"},
-                    "count": {"type": "integer", "description": "Number of operations to undo", "default": 1}
+                    "count": {
+                        "type": "integer",
+                        "description": "Number of operations to undo",
+                        "default": 1,
+                    },
                 },
-                "required": ["file_path"]
-            }
-        }
-    }
+                "required": ["file_path"],
+            },
+        },
+    },
 ]
 
 
@@ -291,8 +343,7 @@ async def check_ollama_available() -> bool:
 
 
 async def call_ollama(
-    messages: List[Dict[str, Any]],
-    tools: List[Dict[str, Any]]
+    messages: List[Dict[str, Any]], tools: List[Dict[str, Any]]
 ) -> Dict[str, Any]:
     """Call Ollama API with tool support."""
     async with httpx.AsyncClient(timeout=120.0) as client:
@@ -300,7 +351,7 @@ async def call_ollama(
             "model": MODEL,
             "messages": messages,
             "tools": tools,
-            "stream": False
+            "stream": False,
         }
         resp = await client.post(f"{OLLAMA_URL}/api/chat", json=payload)
         resp.raise_for_status()
@@ -335,7 +386,9 @@ async def execute_tool(name: str, args: Dict[str, Any]) -> Any:
         return await read_element(args["file_path"], args["path"])
 
     elif name == "replace_content":
-        return await replace_content(args["file_path"], args["path"], args["new_content"])
+        return await replace_content(
+            args["file_path"], args["path"], args["new_content"]
+        )
 
     elif name == "insert_element":
         return await insert_element(
@@ -344,7 +397,7 @@ async def execute_tool(name: str, args: Dict[str, Any]) -> Any:
             args["element_type"],
             args["content"],
             args.get("where", "after"),
-            args.get("heading_level", 1)
+            args.get("heading_level", 1),
         )
 
     elif name == "delete_element":
@@ -355,7 +408,7 @@ async def execute_tool(name: str, args: Dict[str, Any]) -> Any:
             args["file_path"],
             args["source_path"],
             args["target_path"],
-            args.get("where", "after")
+            args.get("where", "after"),
         )
 
     elif name == "search_text":
@@ -418,9 +471,9 @@ class TestOllamaToolCalls:
                     "When asked to perform an action, use the appropriate tool. "
                     "Always use the exact file paths and parameters provided in the user request. "
                     "Do not add any extra text or thinking - just call the tool."
-                )
+                ),
             },
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": prompt},
         ]
 
         response = await call_ollama(messages, TOOLS_SCHEMA)
@@ -606,7 +659,7 @@ Old content here.
         new_content = (self.test_dir / "replace_test.md").read_text()
         assert "New updated content!" in new_content or "new" in new_content.lower()
 
-        print(f"[OK] replace_content: successfully replaced content")
+        print("[OK] replace_content: successfully replaced content")
 
     @pytest.mark.asyncio
     async def test_07_insert_element(self):
@@ -639,7 +692,7 @@ First paragraph.
         new_content = (self.test_dir / "insert_test.md").read_text()
         assert "Inserted" in new_content or "insert" in new_content.lower()
 
-        print(f"[OK] insert_element: successfully inserted element")
+        print("[OK] insert_element: successfully inserted element")
 
     @pytest.mark.asyncio
     async def test_08_search_text(self):
@@ -708,7 +761,7 @@ Paragraph after target.
 
         assert "current" in result
 
-        print(f"[OK] get_context: got context for element")
+        print("[OK] get_context: got context for element")
 
     @pytest.mark.asyncio
     async def test_10_move_element(self):
@@ -745,7 +798,7 @@ Content to move.
 
         assert result.get("success") is True
 
-        print(f"[OK] move_element: successfully moved element")
+        print("[OK] move_element: successfully moved element")
 
     @pytest.mark.asyncio
     async def test_11_update_metadata(self):
@@ -761,7 +814,7 @@ Some text here.
         (self.test_dir / "meta_test.md").write_text(md_content)
 
         response = await self.ask_ollama_to_call_tool(
-            "Update the metadata of file 'meta_test.md' with {\"author\": \"Test Author\", \"version\": \"1.0\"} "
+            'Update the metadata of file \'meta_test.md\' with {"author": "Test Author", "version": "1.0"} '
             "using the update_metadata tool."
         )
 
@@ -782,7 +835,7 @@ Some text here.
         new_content = (self.test_dir / "meta_test.md").read_text()
         assert "author" in new_content.lower() or "Author" in new_content
 
-        print(f"[OK] update_metadata: successfully updated metadata")
+        print("[OK] update_metadata: successfully updated metadata")
 
     @pytest.mark.asyncio
     async def test_12_delete_element(self):
@@ -822,7 +875,7 @@ More content.
         new_content = (self.test_dir / "delete_elem_test.md").read_text()
         assert "Delete This" not in new_content
 
-        print(f"[OK] delete_element: successfully deleted element")
+        print("[OK] delete_element: successfully deleted element")
 
     @pytest.mark.asyncio
     async def test_13_undo(self):
@@ -854,7 +907,7 @@ Original content.
 
         assert result.get("success") is True
 
-        print(f"[OK] undo: successfully undid changes")
+        print("[OK] undo: successfully undid changes")
 
     @pytest.mark.asyncio
     async def test_14_delete_item(self):
@@ -881,7 +934,7 @@ Original content.
         assert result.get("success") is True
         assert not test_file.exists()
 
-        print(f"[OK] delete_item: successfully deleted file")
+        print("[OK] delete_item: successfully deleted file")
 
     @pytest.mark.asyncio
     async def test_15_search_tools(self):
@@ -929,7 +982,9 @@ async def test_full_workflow():
 
         # Step 1: Create a document
         print("Step 1: Creating document...")
-        result = await create_file("workflow.md", """# Project Plan
+        result = await create_file(
+            "workflow.md",
+            """# Project Plan
 
 ## Goals
 
@@ -939,7 +994,8 @@ Define project goals here.
 
 Q1 2025: Planning
 Q2 2025: Implementation
-""")
+""",
+        )
         assert result.get("success") is True
         print("  - Created workflow.md")
 
@@ -952,12 +1008,7 @@ Q2 2025: Implementation
         # Step 3: Insert new content
         print("Step 3: Inserting new section...")
         result = await insert_element(
-            "workflow.md",
-            "Timeline",
-            "heading",
-            "Resources",
-            "after",
-            heading_level=2
+            "workflow.md", "Timeline", "heading", "Resources", "after", heading_level=2
         )
         assert result.get("success") is True
         print("  - Inserted Resources section")
@@ -970,16 +1021,17 @@ Q2 2025: Implementation
 
         # Step 5: Replace content
         print("Step 5: Replacing content...")
-        result = await replace_content("workflow.md", "Goals > paragraph 1", "Build an awesome product!")
+        result = await replace_content(
+            "workflow.md", "Goals > paragraph 1", "Build an awesome product!"
+        )
         assert result.get("success") is True
         print("  - Replaced goals paragraph")
 
         # Step 6: Update metadata
         print("Step 6: Adding metadata...")
-        result = await update_document_metadata("workflow.md", {
-            "project": "MCP Server",
-            "status": "in-progress"
-        })
+        result = await update_document_metadata(
+            "workflow.md", {"project": "MCP Server", "status": "in-progress"}
+        )
         assert result.get("success") is True
         print("  - Added metadata")
 

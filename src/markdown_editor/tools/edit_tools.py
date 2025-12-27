@@ -2,9 +2,9 @@ import logging
 import os
 import fcntl
 import tempfile
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 from ..core.document import Document
-from ..core.path_utils import resolve_path, is_safe_path
+from ..core.path_utils import resolve_path
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class FileLock:
 
     def __enter__(self):
         # Create lock file if it doesn't exist
-        self.lock_file = open(self.lock_path, 'w')
+        self.lock_file = open(self.lock_path, "w")
         if self.exclusive:
             fcntl.flock(self.lock_file.fileno(), fcntl.LOCK_EX)
         else:
@@ -89,17 +89,15 @@ class EditTool:
         # Check if cache is still valid
         if not self._is_cache_valid(abs_path):
             if os.path.exists(abs_path):
-                with open(abs_path, 'r', encoding='utf-8') as f:
+                with open(abs_path, "r", encoding="utf-8") as f:
                     content = f.read()
                 mtime = self._get_file_mtime(abs_path)
                 self._documents[abs_path] = CachedDocument(
-                    document=Document(content=content),
-                    mtime=mtime
+                    document=Document(content=content), mtime=mtime
                 )
             else:
                 self._documents[abs_path] = CachedDocument(
-                    document=Document(content=""),
-                    mtime=0.0
+                    document=Document(content=""), mtime=0.0
                 )
 
         return self._documents[abs_path].document
@@ -115,9 +113,9 @@ class EditTool:
         dir_path = os.path.dirname(abs_path)
 
         # Write to temp file first
-        fd, temp_path = tempfile.mkstemp(dir=dir_path, prefix='.tmp_')
+        fd, temp_path = tempfile.mkstemp(dir=dir_path, prefix=".tmp_")
         try:
-            with os.fdopen(fd, 'w', encoding='utf-8') as f:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
                 f.write(content)
             # Atomic rename
             os.replace(temp_path, abs_path)
@@ -129,7 +127,9 @@ class EditTool:
                 pass
             raise
 
-    async def get_structure(self, file_path: str, depth: Optional[int] = None) -> List[dict]:
+    async def get_structure(
+        self, file_path: str, depth: Optional[int] = None
+    ) -> List[dict]:
         doc = self.get_doc(file_path)
         return doc.get_structure(depth=depth)
 
@@ -137,7 +137,9 @@ class EditTool:
         doc = self.get_doc(file_path)
         return doc.view_element(path)
 
-    async def replace(self, file_path: str, path: str, new_content: str) -> Dict[str, Any]:
+    async def replace(
+        self, file_path: str, path: str, new_content: str
+    ) -> Dict[str, Any]:
         abs_path = resolve_path(file_path)
         with FileLock(abs_path):
             doc = self.get_doc(file_path)
@@ -157,8 +159,15 @@ class EditTool:
             result.pop("_pending_entry", None)
         return result
 
-    async def insert(self, file_path: str, path: str, element_type: str, content: str,
-                     where: str = "after", heading_level: int = 1) -> Dict[str, Any]:
+    async def insert(
+        self,
+        file_path: str,
+        path: str,
+        element_type: str,
+        content: str,
+        where: str = "after",
+        heading_level: int = 1,
+    ) -> Dict[str, Any]:
         abs_path = resolve_path(file_path)
         with FileLock(abs_path):
             doc = self.get_doc(file_path)
@@ -216,7 +225,9 @@ class EditTool:
         doc = self.get_doc(file_path)
         return doc.get_context(path)
 
-    async def move(self, file_path: str, src_path: str, dst_path: str, where: str = "after") -> Dict[str, Any]:
+    async def move(
+        self, file_path: str, src_path: str, dst_path: str, where: str = "after"
+    ) -> Dict[str, Any]:
         abs_path = resolve_path(file_path)
         with FileLock(abs_path):
             doc = self.get_doc(file_path)
@@ -231,7 +242,9 @@ class EditTool:
                     return {"error": f"Failed to write file: {e}"}
         return result
 
-    async def update_metadata(self, file_path: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+    async def update_metadata(
+        self, file_path: str, metadata: Dict[str, Any]
+    ) -> Dict[str, Any]:
         abs_path = resolve_path(file_path)
         with FileLock(abs_path):
             doc = self.get_doc(file_path)
@@ -247,37 +260,58 @@ class EditTool:
                     return {"error": f"Failed to write file: {e}"}
         return result
 
+
 # Global instance following the template
 _instance = EditTool()
+
 
 # Async wrappers following the template
 async def get_document_structure(file_path: str, depth: Optional[int] = None):
     return await _instance.get_structure(file_path, depth)
 
+
 async def read_element(file_path: str, path: str):
     return await _instance.read(file_path, path)
+
 
 async def replace_content(file_path: str, path: str, new_content: str):
     return await _instance.replace(file_path, path, new_content)
 
-async def insert_element(file_path: str, path: str, element_type: str, content: str, 
-                         where: str = "after", heading_level: int = 1):
-    return await _instance.insert(file_path, path, element_type, content, where, heading_level)
+
+async def insert_element(
+    file_path: str,
+    path: str,
+    element_type: str,
+    content: str,
+    where: str = "after",
+    heading_level: int = 1,
+):
+    return await _instance.insert(
+        file_path, path, element_type, content, where, heading_level
+    )
+
 
 async def delete_element(file_path: str, path: str):
     return await _instance.delete(file_path, path)
 
+
 async def undo_changes(file_path: str, count: int = 1):
     return await _instance.undo(file_path, count)
+
 
 async def search_in_document(file_path: str, query: str):
     return await _instance.search(file_path, query)
 
+
 async def get_element_context(file_path: str, path: str):
     return await _instance.get_context(file_path, path)
 
-async def move_document_element(file_path: str, src_path: str, dst_path: str, where: str = "after"):
+
+async def move_document_element(
+    file_path: str, src_path: str, dst_path: str, where: str = "after"
+):
     return await _instance.move(file_path, src_path, dst_path, where)
+
 
 async def update_document_metadata(file_path: str, metadata: Dict[str, Any]):
     return await _instance.update_metadata(file_path, metadata)

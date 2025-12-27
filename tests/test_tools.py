@@ -1,8 +1,12 @@
-import asyncio
 import os
 import shutil
 import pytest
-from markdown_editor.tools.file_ops import create_file, list_directory, create_directory, delete_item
+from markdown_editor.tools.file_ops import (
+    create_file,
+    list_directory,
+    create_directory,
+    delete_item,
+)
 from markdown_editor.tools.edit_tools import (
     get_document_structure,
     read_element,
@@ -13,11 +17,12 @@ from markdown_editor.tools.edit_tools import (
     search_in_document,
     get_element_context,
     move_document_element,
-    update_document_metadata
+    update_document_metadata,
 )
 
 TEST_FILE = "test_document.md"
 TEST_DIR = "test_data"
+
 
 @pytest.fixture(autouse=True)
 def setup_test_env():
@@ -26,14 +31,15 @@ def setup_test_env():
         os.remove(TEST_FILE)
     if os.path.exists(TEST_DIR):
         shutil.rmtree(TEST_DIR)
-    
+
     yield
-    
+
     # Cleanup after tests
     if os.path.exists(TEST_FILE):
         os.remove(TEST_FILE)
     if os.path.exists(TEST_DIR):
         shutil.rmtree(TEST_DIR)
+
 
 @pytest.mark.asyncio
 async def test_file_operations():
@@ -62,6 +68,7 @@ async def test_file_operations():
     res = await delete_item(TEST_DIR)
     assert res["success"] is True
     assert not os.path.exists(TEST_DIR)
+
 
 @pytest.mark.asyncio
 async def test_editing_navigation():
@@ -100,6 +107,7 @@ print("hello")
     # paragraph 1 has no siblings before it under Intro
     assert context["before"] is None
 
+
 @pytest.mark.asyncio
 async def test_editing_modifications():
     test_file = "test_edit.md"
@@ -114,17 +122,20 @@ async def test_editing_modifications():
         struct = await get_document_structure(test_file)
         print(f"DEBUG: Current structure: {struct}")
     assert res.get("success") is True
-    
+
     # Verify content
     read = await read_element(test_file, "Header > paragraph 1")
     assert read["content"] == "New Paragraph."
 
     # 2. Insert
-    res = await insert_element(test_file, "Header > paragraph 1", "paragraph", "New Para", where="after")
+    res = await insert_element(
+        test_file, "Header > paragraph 1", "paragraph", "New Para", where="after"
+    )
     assert res["success"] is True
 
     # Verify insertion - flatten structure to check all items
     struct = await get_document_structure(test_file, depth=3)
+
     def flatten(items):
         result = []
         for item in items:
@@ -132,25 +143,28 @@ async def test_editing_modifications():
             if "children" in item:
                 result.extend(flatten(item["children"]))
         return result
+
     all_items = flatten(struct)
     assert any("paragraph 2" in item["path"] for item in all_items)
 
     # 3. Move
-    await move_document_element(test_file, "Header > paragraph 2", "Header", where="before")
+    await move_document_element(
+        test_file, "Header > paragraph 2", "Header", where="before"
+    )
     struct = await get_document_structure(test_file)
     assert "paragraph" in struct[0]["path"]
 
     # 4. Metadata
     res = await update_document_metadata(test_file, {"status": "tested"})
     assert res["success"] is True
-    
+
     # 5. Delete
     await delete_element(test_file, "Header")
     struct = await get_document_structure(test_file)
     assert not any(item["path"] == "Header" for item in struct)
 
     # 6. Undo
-    # Note: Undo in current implementation might be limited to replace/insert, 
+    # Note: Undo in current implementation might be limited to replace/insert,
     # but let's see if it runs without crashing and reverts some state
     res = await undo_changes(test_file, count=1)
     # Since we deleted 'Header' last, undo might restore it if Journaling works correctly
