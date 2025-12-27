@@ -1,0 +1,25 @@
+# Smithery configuration for markdown-editor-mcp-server
+# See https://smithery.ai/ for more information
+
+version: 0.1.0
+project:
+  name: markdown-editor-mcp-server
+  description: MCP server for structured, semantic editing of Markdown files without overwriting the entire file.
+  keywords: [markdown, editor, mcp, claude, context-protocol, ollama]
+  license: MIT
+  homepage: https://github.com/KazKozDev/markdown-editor-mcp-server
+
+# Configuration for running the server
+run:
+  command: python3
+  args: [-m, markdown_editor.server]
+  env:
+    # Add any default environment variables if needed
+    PYTHONPATH: src
+
+# Installation instructions for Smithery CLI
+install:
+  pip:
+    - -e .
+    - mcp
+    - pyyaml
