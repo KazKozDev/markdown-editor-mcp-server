@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] - 2024-12-28
+
+### Fixed
+- **Critical serialization bugfix**: Fixed `Object of type TextContent is not JSON serializable` error. The `call_tool` function was returning `dict` instead of `mcp.types.CallToolResult`, causing MCP SDK to fail when serializing responses containing `TextContent` objects.
+
 ## [0.1.6] - 2024-12-28
 
 ### Fixed

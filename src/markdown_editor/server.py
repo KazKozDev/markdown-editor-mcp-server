@@ -7,6 +7,7 @@ from mcp.server import Server, NotificationOptions
 from mcp.types import (
     Tool,
     TextContent,
+    CallToolResult,
 )
 import mcp.server.stdio
 
@@ -500,102 +501,102 @@ async def call_tool(name: str, arguments: dict) -> Any:
                 for t in all_tools
                 if query in t.name or (t.description and query in t.description.lower())
             ]
-            return {
-                "content": [
+            return CallToolResult(
+                content=[
                     TextContent(
                         type="text", text=f"Relevant tools: {', '.join(relevant)}"
                     )
                 ],
-                "structuredContent": {"tools": relevant},
-                "isError": False,
-            }
+                structuredContent={"tools": relevant},
+                isError=False,
+            )
 
         # 2. FILE OPS
         if name == "list_directory":
             path = arguments.get("path", ".")
             items = await list_directory(path)
             result = {"items": items}
-            return {
-                "content": [TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))],
-                "structuredContent": result,
-                "isError": items is None,
-            }
+            return CallToolResult(
+                content=[TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))],
+                structuredContent=result,
+                isError=items is None,
+            )
 
         elif name == "create_file":
             res = await create_file(arguments["path"], arguments.get("content", ""))
-            return {
-                "content": [TextContent(type="text", text="File created")],
-                "structuredContent": res,
-                "isError": "error" in res,
-            }
+            return CallToolResult(
+                content=[TextContent(type="text", text="File created")],
+                structuredContent=res,
+                isError="error" in res,
+            )
 
         elif name == "create_directory":
             res = await create_directory(arguments["path"])
-            return {
-                "content": [TextContent(type="text", text="Directory created")],
-                "structuredContent": res,
-                "isError": "error" in res,
-            }
+            return CallToolResult(
+                content=[TextContent(type="text", text="Directory created")],
+                structuredContent=res,
+                isError="error" in res,
+            )
 
         elif name == "delete_item":
             res = await delete_item(arguments["path"])
-            return {
-                "content": [TextContent(type="text", text="Item deleted")],
-                "structuredContent": res,
-                "isError": "error" in res,
-            }
+            return CallToolResult(
+                content=[TextContent(type="text", text="Item deleted")],
+                structuredContent=res,
+                isError="error" in res,
+            )
 
         # 3. EDIT OPS (require file_path)
         file_path = arguments.get("file_path")
         if not file_path:
-            return {
-                "content": [TextContent(type="text", text="Missing file_path")],
-                "isError": True,
-            }
+            return CallToolResult(
+                content=[TextContent(type="text", text="Missing file_path")],
+                isError=True,
+            )
 
         if name == "get_document_structure":
             res = await get_document_structure(file_path, arguments.get("depth", 2))
             result = {"structure": res}
-            return {
-                "content": [TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))],
-                "structuredContent": result,
-                "isError": False,
-            }
+            return CallToolResult(
+                content=[TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))],
+                structuredContent=result,
+                isError=False,
+            )
 
         elif name == "search_text":
             res = await search_in_document(file_path, arguments["query"])
             result = {"results": res, "count": len(res)}
-            return {
-                "content": [TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))],
-                "structuredContent": result,
-                "isError": False,
-            }
+            return CallToolResult(
+                content=[TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))],
+                structuredContent=result,
+                isError=False,
+            )
 
         elif name == "get_context":
             res = await get_element_context(file_path, arguments["path"])
-            return {
-                "content": [TextContent(type="text", text=json.dumps(res, ensure_ascii=False, indent=2))],
-                "structuredContent": res,
-                "isError": "error" in res,
-            }
+            return CallToolResult(
+                content=[TextContent(type="text", text=json.dumps(res, ensure_ascii=False, indent=2))],
+                structuredContent=res,
+                isError="error" in res,
+            )
 
         elif name == "read_element":
             res = await read_element(file_path, arguments["path"])
-            return {
-                "content": [TextContent(type="text", text=json.dumps(res, ensure_ascii=False, indent=2))],
-                "structuredContent": res,
-                "isError": "error" in res,
-            }
+            return CallToolResult(
+                content=[TextContent(type="text", text=json.dumps(res, ensure_ascii=False, indent=2))],
+                structuredContent=res,
+                isError="error" in res,
+            )
 
         elif name == "replace_content":
             res = await replace_content(
                 file_path, arguments["path"], arguments["new_content"]
             )
-            return {
-                "content": [TextContent(type="text", text="Content replaced")],
-                "structuredContent": res,
-                "isError": "error" in res,
-            }
+            return CallToolResult(
+                content=[TextContent(type="text", text="Content replaced")],
+                structuredContent=res,
+                isError="error" in res,
+            )
 
         elif name == "insert_element":
             res = await insert_element(
@@ -606,11 +607,11 @@ async def call_tool(name: str, arguments: dict) -> Any:
                 arguments.get("where", "after"),
                 arguments.get("heading_level", 1),
             )
-            return {
-                "content": [TextContent(type="text", text="Element inserted")],
-                "structuredContent": res,
-                "isError": "error" in res,
-            }
+            return CallToolResult(
+                content=[TextContent(type="text", text="Element inserted")],
+                structuredContent=res,
+                isError="error" in res,
+            )
 
         elif name == "move_element":
             res = await move_document_element(
@@ -619,44 +620,44 @@ async def call_tool(name: str, arguments: dict) -> Any:
                 arguments["target_path"],
                 arguments.get("where", "after"),
             )
-            return {
-                "content": [TextContent(type="text", text="Element moved")],
-                "structuredContent": res,
-                "isError": "error" in res,
-            }
+            return CallToolResult(
+                content=[TextContent(type="text", text="Element moved")],
+                structuredContent=res,
+                isError="error" in res,
+            )
 
         elif name == "delete_element":
             res = await delete_element(file_path, arguments["path"])
-            return {
-                "content": [TextContent(type="text", text="Element deleted")],
-                "structuredContent": res,
-                "isError": "error" in res,
-            }
+            return CallToolResult(
+                content=[TextContent(type="text", text="Element deleted")],
+                structuredContent=res,
+                isError="error" in res,
+            )
 
         elif name == "update_metadata":
             res = await update_document_metadata(file_path, arguments["metadata"])
-            return {
-                "content": [TextContent(type="text", text="Metadata updated")],
-                "structuredContent": res,
-                "isError": "error" in res,
-            }
+            return CallToolResult(
+                content=[TextContent(type="text", text="Metadata updated")],
+                structuredContent=res,
+                isError="error" in res,
+            )
 
         elif name == "undo":
             res = await undo_changes(file_path, arguments.get("count", 1))
-            return {
-                "content": [TextContent(type="text", text="Undo performed")],
-                "structuredContent": res,
-                "isError": "error" in res,
-            }
+            return CallToolResult(
+                content=[TextContent(type="text", text="Undo performed")],
+                structuredContent=res,
+                isError="error" in res,
+            )
 
-        return {
-            "content": [TextContent(type="text", text=f"Unknown tool: {name}")],
-            "isError": True,
-        }
+        return CallToolResult(
+            content=[TextContent(type="text", text=f"Unknown tool: {name}")],
+            isError=True,
+        )
 
     except Exception as e:
         logger.error(f"Error: {e}")
-        return {"content": [TextContent(type="text", text=str(e))], "isError": True}
+        return CallToolResult(content=[TextContent(type="text", text=str(e))], isError=True)
 
 
 async def main():
