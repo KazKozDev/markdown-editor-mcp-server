@@ -9,15 +9,16 @@ project:
   license: MIT
   homepage: https://github.com/KazKozDev/markdown-editor-mcp-server
 
-# Configuration for running the server
-run:
-  command: python3
-  args: [-m, markdown_editor.server]
-  env:
-    PYTHONPATH: src
+# Runtime configuration
+runtime: container
 
-# Installation instructions for Smithery CLI
-install:
-  pip:
-    - mcp>=0.9.0
-    - pyyaml>=6.0.1
+# Build configuration
+build:
+  dockerfile: Dockerfile
+  dockerBuildPath: .
+
+# Start command configuration
+startCommand:
+  type: stdio
+  command: python
+  args: [-m, markdown_editor.server]
