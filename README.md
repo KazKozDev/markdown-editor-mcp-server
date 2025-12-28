@@ -1,7 +1,7 @@
 # Markdown Editor MCP Server
 
 [![Tests](https://github.com/KazKozDev/markdown-editor-mcp-server/actions/workflows/tests.yml/badge.svg)](https://github.com/KazKozDev/markdown-editor-mcp-server/actions/workflows/tests.yml)
-[![PyPI version](https://badge.fury.io/py/markdown-editor-mcp-server.svg)](https://badge.fury.io/py/markdown-editor-mcp-server)
+[![PyPI version](https://img.shields.io/pypi/v/markdown-editor-mcp-server)](https://pypi.org/project/markdown-editor-mcp-server/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![MCP 2025](https://img.shields.io/badge/MCP-2025%20Standard-green.svg)](https://modelcontextprotocol.io)
