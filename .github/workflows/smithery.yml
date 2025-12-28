@@ -21,6 +21,11 @@ jobs:
         run: |
           pip install .
           
+      - name: Install system dependencies for Smithery CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsecret-1-dev
+          
       - name: Install Smithery CLI
         run: npm install -g @smithery/cli
         
