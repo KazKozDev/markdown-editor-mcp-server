@@ -1,0 +1,31 @@
+name: Smithery Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          pip install .
+          
+      - name: Install Smithery CLI
+        run: npm install -g @smithery/cli
+        
+      - name: Smithery Login
+        run: echo "${{ secrets.SMITHERY_API_KEY }}" | smithery login
+        
+      - name: Smithery Build
+        run: smithery build
